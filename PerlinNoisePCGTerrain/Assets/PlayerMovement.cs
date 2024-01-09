@@ -15,12 +15,10 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 velocity;
 
     private bool running;
-    private Animator _animator;
 
     private void Start()
     {
         _characterController = GetComponent<CharacterController>();
-        _animator = GetComponent<Animator>();
     }
 
 
@@ -32,25 +30,15 @@ public class PlayerMovement : MonoBehaviour
         if ((Input.GetKey(KeyCode.LeftShift)))
         {
             Move(_runSpeed);
-            _animator.SetFloat("Speed", 2);
         }
         else if ((Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S) ||
                   Input.GetKey(KeyCode.D)))
         {
             Move(_walkSpeed);
-            _animator.SetFloat("Speed", 1);
-        }
-        else if (!Input.GetKey(KeyCode.A) || !Input.GetKey(KeyCode.W) || !Input.GetKey(KeyCode.S) ||
-                 !Input.GetKey(KeyCode.D))
-        {
-            _animator.SetFloat("Speed", 0);
         }
 
 
         Gravity();
-        if (IsGrounded() && Input.GetKeyDown(KeyCode.Space)) velocity.y += _jumpForce;
-
-        _animator.SetBool("isGrounded", IsGrounded());
     }
 
     private bool IsGrounded()

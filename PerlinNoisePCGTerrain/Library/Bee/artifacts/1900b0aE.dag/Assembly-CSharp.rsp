@@ -390,9 +390,11 @@
 "Assets/CameraController.cs"
 "Assets/CameraController1.cs"
 "Assets/CameraMove.cs"
+"Assets/DataManager.cs"
 "Assets/FPSController.cs"
 "Assets/PlayerMovement.cs"
 "Assets/TerrainGenerator.cs"
+"Assets/UI_Controller.cs"
 -langversion:9.0
 
 /deterministic

@@ -9,8 +9,8 @@ using Cinemachine;
 
         private void Start()
         {
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
+            //Cursor.visible = false;
+            //Cursor.lockState = CursorLockMode.Locked;
         }
 
         private void FixedUpdate()

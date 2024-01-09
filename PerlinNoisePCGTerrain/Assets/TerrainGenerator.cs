@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -7,20 +8,24 @@ public class TerrainGenerator : MonoBehaviour
     [SerializeField] private int zSize = 10;
 
     [SerializeField] private float noiseScale = 0.03f;
-    [SerializeField] private float heightMultiplier = 13;
+    [SerializeField] private float heightMultiplier = 2;
 
     [SerializeField] private int octaves = 4;
-    [SerializeField] private float persistence = 0.5f; //how much each octave contributes to the overall shape
-    [SerializeField] private float lacunarity = 2f; //how much detail is added or removed at each octave
+    [SerializeField] private float persistence = 0.5f;
+    [SerializeField] private float lacunarity = 2f; 
+    
+    private int xOffset;
+    private int zOffset;
+    
     private Mesh mesh;
-    private Texture2D gradientTexture;
+    private Texture2D gradTexture2D;
     [SerializeField] private Gradient terrainGradient;
     [SerializeField] private Material mat;
 
+    [SerializeField] private int grassMultiplier = 1;
     [SerializeField] private float minGrass, maxGrass, minTree, maxTree;
     [SerializeField] private GameObject[] grass, trees, rocks;
-    private int xOffset;
-    private int zOffset;
+
     private Vector3[] vertices;
 
     private float minTerrainHeight;
@@ -39,6 +44,9 @@ public class TerrainGenerator : MonoBehaviour
 
     private void Start()
     {
+        xSize = UI_Controller._instance.width;
+        zSize = UI_Controller._instance.length;
+        heightMultiplier = UI_Controller._instance.height;
         mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = mesh;
 
@@ -50,16 +58,18 @@ public class TerrainGenerator : MonoBehaviour
         minTerrainHeight = mesh.bounds.min.y + transformPos.y - 0.01f;
         maxTerrainHeight = mesh.bounds.max.y + transformPos.y + 0.01f;
 
-        mat.SetTexture(Gradient, gradientTexture);
+        mat.SetTexture(Gradient, gradTexture2D);
 
         mat.SetFloat(MinHeight, minTerrainHeight);
         mat.SetFloat(MaxHeight, maxTerrainHeight);
         InstGrass();
+        gameObject.AddComponent(typeof(MeshCollider));
     }
+
 
     private void GradientToTexture()
     {
-        gradientTexture = new Texture2D(1, 100);
+        gradTexture2D = new Texture2D(1, 100);
         var pixelColors = new Color[100];
 
         for (var i = 0; i < 100; i++)
@@ -67,8 +77,8 @@ public class TerrainGenerator : MonoBehaviour
             pixelColors[i] = terrainGradient.Evaluate((float)i / 100);
         }
 
-        gradientTexture.SetPixels(pixelColors);
-        gradientTexture.Apply();
+        gradTexture2D.SetPixels(pixelColors);
+        gradTexture2D.Apply();
     }
 
     private void GenerateVertices()
@@ -108,7 +118,7 @@ public class TerrainGenerator : MonoBehaviour
         {
             for (var x = 0; x < xSize; x++)
             {
-                meshTriangles[corner + 0] = vert + 0;
+                meshTriangles[corner] = vert;
                 meshTriangles[corner + 1] = vert + xSize + 1;
                 meshTriangles[corner + 2] = vert + 1;
 
@@ -137,30 +147,36 @@ public class TerrainGenerator : MonoBehaviour
         {
             if (vert + 1 + xSize < vertices.Length)
             {
-                var xPosLerp = Vector3.Lerp(vertices[vert], vertices[vert + 1 + xSize], Random.Range(0.3f, 0.85f));
-                var grassHeight = Mathf.InverseLerp(minTerrainHeight, maxTerrainHeight, xPosLerp.y);
-                if (xPosLerp.y / heightMultiplier - 0.01f < maxGrass & xPosLerp.y / heightMultiplier - 0.01f > minGrass)
+                var xPosLerp = Vector3.Lerp(vertices[vert], vertices[vert + 1 + xSize], Random.Range(0f, 1f));
+                for (int i = 0; i < grassMultiplier; i++)
                 {
-                    Instantiate(grass[Random.Range(0, grass.Length)], xPosLerp, Quaternion.identity);
+                    if (xPosLerp.y / heightMultiplier  < maxGrass &
+                        xPosLerp.y / heightMultiplier> minGrass)
+                    {
+                        Instantiate(grass[Random.Range(0, grass.Length)], xPosLerp, Quaternion.identity);
+                    }
                 }
 
-                if (xPosLerp.y / heightMultiplier - 0.01f < maxTree & xPosLerp.y / heightMultiplier - 0.01f > minTree)
+                if (xPosLerp.y / heightMultiplier < maxTree & xPosLerp.y / heightMultiplier  > minTree)
                 {
                     if (Random.Range(0, 10) > 9)
                         Instantiate(trees[Random.Range(0, trees.Length)], xPosLerp, Quaternion.identity);
                 }
             }
-
             if (vert + 1 >= vertices.Length) continue;
             if (!(vertices[vert].x < vertices[vert + 1].x)) continue;
-            var zPosLerp = Vector3.Lerp(vertices[vert], vertices[vert + 1], Random.Range(0.3f, 0.85f));
-            if (zPosLerp.y / heightMultiplier - 0.01f < maxGrass & zPosLerp.y / heightMultiplier - 0.01f > minGrass)
+            var zPosLerp = Vector3.Lerp(vertices[vert], vertices[vert + 1], Random.Range(0f, 1f));
+            for (int i = 0; i < grassMultiplier; i++)
             {
-                Instantiate(grass[Random.Range(0, grass.Length)], zPosLerp, Quaternion.identity);
+                if (zPosLerp.y / heightMultiplier < maxGrass & zPosLerp.y / heightMultiplier  > minGrass)
+                {
+                    Instantiate(grass[Random.Range(0, grass.Length)], zPosLerp, Quaternion.identity);
+                }
             }
 
-            zPosLerp = Vector3.Lerp(vertices[vert], vertices[vert + 1], Random.Range(0.3f, 0.85f));
-            if (zPosLerp.y / heightMultiplier - 0.01f < maxTree & zPosLerp.y / heightMultiplier - 0.01f > minTree)
+
+            zPosLerp = Vector3.Lerp(vertices[vert], vertices[vert + 1], Random.Range(0f, 1f));
+            if (zPosLerp.y / heightMultiplier  < maxTree & zPosLerp.y / heightMultiplier  > minTree)
             {
                 if (Random.Range(0, 10) > 8)
                     Instantiate(trees[Random.Range(0, trees.Length)], zPosLerp, Quaternion.identity);
